@@ -26,7 +26,7 @@ type ProofOfWork struct {
 // Requirements:
 // The first few bytes must contains 0s
 
-const Difficulty = 12
+const Difficulty = 18
 
 func NewProof(b *Block) *ProofOfWork {
 	target := big.NewInt(1)
@@ -45,8 +45,9 @@ func (pow *ProofOfWork) Run() (int, []byte) {
 
 	for nonce < math.MaxInt64 {
 		data := pow.InitData(nonce)
-		hash := sha256.Sum256(data)
+		hash = sha256.Sum256(data)
 
+		fmt.Printf("\r%x", hash)
 		intHash.SetBytes(hash[:])
 
 		if intHash.Cmp(pow.Target) == -1 {

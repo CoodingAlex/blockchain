@@ -43,7 +43,10 @@ func InitBlockhain() *BlockChain {
 			return err
 		} else {
 			item, err := txn.Get([]byte("lh"))
-			lastHash = []byte(item.String())
+			err = item.Value(func(val []byte) error {
+				lastHash = val
+				return nil
+			})
 			Handle(err)
 			return err
 		}
@@ -63,7 +66,10 @@ func (chain *BlockChain) AddBlock(data string) {
 		item, err := txn.Get([]byte("lh"))
 		Handle(err)
 
-		lastHash = []byte(item.String())
+		err = item.Value(func(val []byte) error {
+			lastHash = val
+			return nil
+		})
 		return err
 	})
 	Handle(err)
@@ -91,21 +97,23 @@ func (chain *BlockChain) Iterator() *BlockChainIterator {
 }
 
 func (iter *BlockChainIterator) Next() *Block {
+	var encodedBlock []byte
 	var block *Block
 
 	err := iter.Database.View(func(txn *badger.Txn) error {
 		item, err := txn.Get(iter.CurrentHash)
-		fmt.Println(iter.CurrentHash)
 		Handle(err)
 		err = item.Value(func(val []byte) error {
-			block = Deserialize(val)
+			encodedBlock = val
 			return nil
 		})
+		block = Deserialize(encodedBlock)
+
 		return err
 	})
 	Handle(err)
 
 	iter.CurrentHash = block.PrevHash
-	return block
 
+	return block
 }
